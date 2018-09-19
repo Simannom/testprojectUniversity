@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +33,7 @@ public class FillDB {
 
             //Создаём соединение
             connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Соединение установлено");
+            System.out.println("Соединение установлено FillDB");
 
             // getting Statement object to execute query
             statement = connection.createStatement();
@@ -97,4 +98,6 @@ public class FillDB {
         }
 
     }
+
+
 }

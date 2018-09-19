@@ -13,40 +13,37 @@ public class SQLConnection {
 
     // JDBC URL, username and password of MySQL server
     private static final String url = "jdbc:postgresql://127.0.0.1:5432/University";
-    private static final String default_user = "postgres";
-    private static final String default_password = "12345";
+    public static final String default_user = "postgres";
+    public static final String default_password = "12345";
 
     // JDBC variables for opening and managing connection
     private static Connection con;
     private static Statement stmt;
 
-
-    public static Connection establishConnection(String user, String password) throws SQLException {
+    //здесь всё ок
+    public static Connection establishConnection(String user, String password) throws SQLException, ClassNotFoundException  {
 
         //FillDB.fill();
-        try {
-            //Загружаем драйвер
-            Class.forName("org.postgresql.Driver");
-            System.out.println("Драйвер подключен");
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
+        Class.forName("org.postgresql.Driver");
+        //System.out.println("Драйвер подключен");
 
         con = DriverManager.getConnection(url, user, password);
-        System.out.println("Соединение установлено");
+        System.out.println("Соединение установлено SQLConnection");
 
         return con;
 
     }
 
-    public static void breakConnection(Connection connection) {
-        if (connection != null) {
+    public static Connection getConnection(){
+        return con;
+    }
+
+    public static void breakConnection() {
+        if (con != null) {
             try {
-                connection.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-
             }
         }
     }

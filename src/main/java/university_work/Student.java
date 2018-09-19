@@ -1,29 +1,38 @@
 package university_work;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import fillDB.FillDB;
+
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static fillDB.SQLConnection.getConnection;
 
 public class Student {
 
     private String fullName;
     private Integer groupNumber;
+    private String faculty;
     private Integer scholarshipType;
     private Calendar startDate;
 
-    public Student(String fullName, Integer groupNumber, Integer scholarshipType, Calendar startDate){
+    public Student(String fullName, Integer groupNumber, String faculty, Integer scholarshipType, Calendar startDate){
         this.fullName = fullName;
         this.groupNumber = groupNumber;
+        this.faculty = faculty;
         this.scholarshipType = scholarshipType % 3;
         this.startDate = startDate;
     }
 
-    public Student(String fullName, Integer groupNumber, Integer scholarshipType, String dateString){
+    public Student(String fullName, Integer groupNumber, String faculty, Integer scholarshipType, String dateString){
         this.fullName = fullName;
         this.groupNumber = groupNumber;
+        this.faculty = faculty;
         this.scholarshipType = scholarshipType % 3;
         Calendar c = Calendar.getInstance();
         DateFormat format = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -35,8 +44,6 @@ public class Student {
 
         this.startDate = c;
     }
-
-
 
     public static String toString(Calendar date) {
         DateFormat format1 = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -72,7 +79,7 @@ public class Student {
         String result = "SELECT * FROM public.\"Students\" S LEFT JOIN public.\"Groups\" G ON S.\"GroupNumber\" = G.\"GroupNumber\" ";
         return result;
     }
-    public static String listStudents(Statement stmt) throws SQLException {
+    public static String stringListStudents(Statement stmt) throws SQLException {
         String result = "";
         ResultSet rs = stmt.executeQuery(listSQLQuery());
         while (rs.next()) {
@@ -87,6 +94,122 @@ public class Student {
         }
         rs.close();
         return result;
+    }
+
+    public static String stringListStudentsWebST(Statement stmt) throws SQLException {
+        String result = "";
+        ResultSet rs = stmt.executeQuery(listSQLQuery());
+        int i = 0;
+        while (rs.next()) {
+            /*
+            String result = "<th>" + this.fullName + "</th>"
+                +  "<th>" + this.groupNumber.toString() + "</th>"
+                +  "<th>" + this.faculty + "</th>"
+                +  "<th>" + this.scholarshipType.toString() + "</th>"
+                +  "<th>" + this.startDate.toString() + "</th>" ;
+            * */
+            result += "<tr>"
+                    + "<th>" + rs.getString("FullName") + "</th>"
+                    + "<th>" + rs.getInt("GroupNumber") + "</th>"
+                    + "<th>" + rs.getString("Faculty") + "</th>"
+                    + "<th>" + rs.getInt("ScholarshipType") + "</th>"
+                    + "<th>" + rs.getDate("start_date") + "</th>"
+                    +
+                    "<!--" +
+                    "<th><input type=\"button\" id=b1_" + i + "  value=\"Submit\" name=\"button\" onClick='submitForm(this)'/></th>" +
+                    "<th><input type=\"button\" id=b2_" + i + "  value=\"Update\" name=\"button\" onClick='submitForm(this)'/></th>" +
+                    "-->" +
+                    "<th><input type=\"button\" id=b3_" + i + " value=\"Delete\" name=\"button\" onClick='submitForm(this)'/></th>" +
+                    "</tr>"
+                    + "\n";
+            ++i;
+        }
+        rs.close();
+        return result;
+    }
+
+    public static String stringListStudentsWeb (){
+
+        try {
+            Connection connection = getConnection();
+            Statement statement;
+            statement = connection.createStatement();
+            String result = stringListStudentsWebST(statement);
+            statement.close();
+            return result;
+        }
+        catch (SQLException e){}
+        return "";
+    }
+
+    public static List<Student> listStudents(Statement stmt) throws SQLException {
+        List<Student> result = new ArrayList<>();
+        ResultSet rs = stmt.executeQuery(listSQLQuery());
+        Student student = null;
+        while (rs.next()) {
+            student = new Student (rs.getString("FullName"),
+                    rs.getInt("GroupNumber"),
+                    rs.getString("Faculty"),
+                    rs.getInt("ScholarshipType"),
+                    //возможно надо более адекваьно брать дату
+                    rs.getDate("start_date").toString()
+            );
+            result.add(student);
+        }
+        rs.close();
+        return result;
+    }
+
+    public static List<Student> listStudents () {
+        List<Student> students = null;
+        try{
+            Connection connection = getConnection();
+
+            try {
+                Statement statement;
+                statement = connection.createStatement();
+                students = Student.listStudents(statement);
+                statement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception ex) {
+            //выводим наиболее значимые сообщения
+            Logger.getLogger(FillDB.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+
+        return students;
+    }
+
+    public static String rowsSQLQuery(){
+        return "SELECT COUNT(*) FROM public.\"Students\"";
+    }
+
+    public static Integer rowsST(Statement statement) throws SQLException {
+        return statement.executeUpdate(rowsSQLQuery());
+    }
+
+    public static Integer rows(){
+        Integer row_num = 0;
+        try{
+            Connection connection = getConnection();
+
+            try {
+                Statement statement;
+                statement = connection.createStatement();
+                row_num = Student.rowsST(statement);
+                statement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception ex) {
+            //выводим наиболее значимые сообщения
+            row_num = 0;
+            Logger.getLogger(FillDB.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return row_num;
     }
 
 }

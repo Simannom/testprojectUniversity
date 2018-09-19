@@ -1,34 +1,40 @@
 <%--
   Created by IntelliJ IDEA.
-  User: Saphi
+  User: Simannom
   Date: 19.08.2018
   Time: 21:26
   To change this template use File | Settings | File Templates.
 --%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html lang="en">
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Login Page</title>
+    <title>Sign in</title>
 </head>
 
 <body>
 
-    <c:if test="${violations != null}">
-        <c:forEach items="${violations}" var="violation">
-            <p>${violation}.</p>
-        </c:forEach>
-    </c:if>
 
-    <form action="${pageContext.request.contextPath}/login" method="post">
-        <label for="UserName"> Пользователь : </label>
-        <input type="text" name="UserName" id="UserName" value="${UserName}">
-        <label for="password"> Пароль: </label>
-        <input type="text" name="password" id="password" value="${password}">
+<div>
+    <div>
+        <div>
+            <h2>Sign in</h2>
+        </div>
 
-            <input type="submit" name="login" value="Login">
-    </form>
+        <form method="post">
+            <label>Name:
+                <input type="text" name="name"><br />
+            </label>
+            <label>Password:
+                <input type="password" name="pass"><br />
+            </label>
+
+            <button type="submit" onclick="location.href='/list'">Submit
+            </button>
+
+            <button onclick="location.href='/'">Back to main</button>
+        </form>
+    </div>
+</div>
 
 
 </body>

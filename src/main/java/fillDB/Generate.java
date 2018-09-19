@@ -34,7 +34,7 @@ public class Generate {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
             calendar.set(2000 + randomizer*2, Calendar.SEPTEMBER, 1);
-            students.add (new Student(fullNames[i], (randomizer%5+1)*100 + randomizer,
+            students.add (new Student(fullNames[i], (randomizer%5+1)*100 + randomizer, "",
                     randomizer%3 ,calendar));
         }
         return students;

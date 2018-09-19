@@ -10,40 +10,31 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
-@WebServlet(name = "LoginServlet", urlPatterns = "/login")
+
+//@WebServlet(name = "LoginServlet", urlPatterns = "/login")
 public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("web/views/login.jsp").forward(request, response);
+        request.getRequestDispatcher("views/login.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User user = User.fromRequestParameters(request);
+        //System.out.println(user.toString());
+
         user.setAsRequestAttributes(request);
-        List violations = user.validate();
-
-        if (!violations.isEmpty()) {
-            request.setAttribute("violations", violations);
-        }
-
-        String url = determineUrl(violations);
+        String url = user.determineUrl();
+        //System.out.println(url);
         request.getRequestDispatcher(url).forward(request, response);
     }
 
-    private String determineUrl(List violations) {
-        if (!violations.isEmpty()) {
-            return "/WEB-INF/views/list.jsp";
-        } else {
-            return "/WEB-INF/views/login.jsp";
-        }
-    }
+
 
     private static class User {
         private final String name;
@@ -55,30 +46,38 @@ public class LoginServlet extends HttpServlet {
         }
 
         public static User fromRequestParameters(HttpServletRequest request){
-            return new User(request.getParameter("UserName"),
-                    request.getParameter("password"));
+            return new User(request.getParameter("name"),
+                    request.getParameter("pass"));
         }
 
         public void setAsRequestAttributes(HttpServletRequest request) {
-            request.setAttribute("UserName", name);
-            request.setAttribute("password", password);
+            request.setAttribute("name", name);
+            request.setAttribute("pass", password);
         }
 
-        public List validate() {
-            List violations = new ArrayList<>();
-            if (!StringValidator.validate(name)) {
-                violations.add("Имя Пользователя является обязательным полем");
+        private String determineUrl() {
+            if (this.validate()) {
+                return "/views/list.jsp";
+            } else {
+                return "/views/login.jsp";
             }
-            if (!StringValidator.validate(password)) {
-                violations.add("Пароль является обязательным полем");
+        }
+
+        public boolean validate() {
+            if (StringValidator.validate(name) && StringValidator.validate(password)) {
+                try {
+                    //для работы надо включить библиотеку с драйвером в WEB-INF
+                    Connection con = SQLConnection.establishConnection(name, password);
+                } catch (SQLException e) {
+                    System.out.println("No Connection to DB");
+                    return false;
+                } catch (ClassNotFoundException e) {
+                    System.out.println("No Driver");
+                    return false;
+                }
+                return true;
             }
-            /*try {
-                SQLConnection.establishConnection(name, password);
-            } catch (SQLException ex){
-                violations.add("Неправильное Имя Пользователя или Пароль");
-            }
-            */
-            return violations;
+                return false;
         }
 
         @Override
