@@ -1,5 +1,6 @@
 package login_window.servlets;
 
+import cache.DBCacheManager;
 import fillDB.SQLConnection;
 import university_work.Student;
 
@@ -9,9 +10,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
+
+import static cache.StudentCacheManager.add;
+import static cache.StudentCacheManager.delete;
+import static university_work.Student.deletebyName;
 
 public class ListServlet extends HttpServlet {
     @Override
@@ -22,44 +24,47 @@ public class ListServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        FillWeb.ensureConnection();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //FillWeb.ensureConnection();
 
+        String button = request.getParameter("button");
 
-        SQLConnection.breakConnection();
+        String url = "";
+        if ("list_button".equals(button)) {
+            url = "/index.html";
+            DBCacheManager.cacheClose();
+            SQLConnection.breakConnection();
+            //System.out.println(url);
+        } else if (button.startsWith("del_")) {
+            String fullname = button.substring(4);
+            DBtoWeb.onDelButtonClick(fullname);
+            url = "views/list.jsp";
+        } else if ("add".equals(button)) {
+            DBtoWeb.onAddButtonClick(request);
+            url = "views/list.jsp";
+        }
+        request.getRequestDispatcher(url).forward(request, response);
     }
 
-    private static class FillWeb{
+    private static class DBtoWeb{
 
-        public static void ensureConnection() {
-            Connection connection = SQLConnection.getConnection();
-            if (connection == null) {
-                try {
-                    connection = SQLConnection.establishConnection(
-                            SQLConnection.default_user,SQLConnection.default_password
-                    );
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-
+        public static void onDelButtonClick(String fullname){
+            System.out.println("onDelButtonClick " + fullname);
+            //удаляем строку без кэша
+            //deletebyName(fullname);
+            //удаление с кэшем
+            delete(fullname);
         }
 
-        public static void onButtonClick(){
-            /*
-            function submitForm(x){
-            for (int i = 0; i < Student.rows(); ++i)
-            {
-                if (x.id === ('b3_' + i)) {
-                    document.getElementById('hid1').value = 'button3action';
-                    out.println("b3_ pressed");
-                }
-            }
-            //alert(document.getElementById('hid1').value);
-            document.forms[0].submit();
-            } */
+        public static void onAddButtonClick(HttpServletRequest request){
+            System.out.println("onAddButtonClick");
+            Student newStudent = Student.fromRequestParameters(request);
+            System.out.println(newStudent.toString());
+            //добавляем строку без кэша
+            //newStudent.addStudent();
+
+            //добавление через кэш
+            add(newStudent);
         }
 
     }

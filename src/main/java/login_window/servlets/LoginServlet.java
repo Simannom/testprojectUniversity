@@ -29,7 +29,19 @@ public class LoginServlet extends HttpServlet {
         //System.out.println(user.toString());
 
         user.setAsRequestAttributes(request);
-        String url = user.determineUrl();
+
+        String url = "/index.html";
+
+        String button = request.getParameter("button");
+        if ("button1".equals(button)) {
+            url = user.determineUrl();
+            //System.out.println(url);
+            request.getRequestDispatcher(url).forward(request, response);
+        } else if ("button2".equals(button)) {
+            SQLConnection.breakConnection();
+            //System.out.println(url);
+        }
+
         //System.out.println(url);
         request.getRequestDispatcher(url).forward(request, response);
     }

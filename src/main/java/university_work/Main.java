@@ -1,6 +1,8 @@
 package university_work;
 
 
+import cache.StudentCacheManager;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -41,19 +43,13 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        System.out.println(StudentResult.stringListStudentsTable(StudentCacheManager.select()));
+        /*
         try {
             //con = DriverManager.getConnection(url, user, password);
             // getting Statement object to execute query
             stmt = con.createStatement();
 
-            System.out.println(Student.stringListStudents(stmt));
-            /*
-            Student student = new Student("Sarah Connor", 308, 1, "01.09.2007");
-            student.addStudent(stmt);
-            System.out.println(Student.listStudents(stmt));
-            student.deleteStudent(stmt);
-            System.out.println(Student.listStudents(stmt));
-            */
 
             stmt.close();
             con.close();
@@ -64,6 +60,7 @@ public class Main {
         } finally {
             breakConnection();
         }
-
+        */
+        breakConnection();
     }
 }

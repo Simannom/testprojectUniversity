@@ -34,6 +34,22 @@ public class SQLConnection {
 
     }
 
+    public static void ensureConnection() {
+        Connection connection = SQLConnection.getConnection();
+        if (connection == null) {
+            try {
+                connection = SQLConnection.establishConnection(
+                        SQLConnection.default_user,SQLConnection.default_password
+                );
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     public static Connection getConnection(){
         return con;
     }
@@ -46,6 +62,8 @@ public class SQLConnection {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        System.out.println("SQLConnection: Connection broken");
     }
+
 
 }

@@ -28,14 +28,13 @@
                 <input type="password" name="pass"><br />
             </label>
 
-            <button type="submit" onclick="location.href='/list'">Submit
-            </button>
+            <button type="submit" name="button" value="button1">Submit </button>
+            <button type="submit" name="button" value="button2">Back to main</button>
 
-            <button onclick="location.href='/'">Back to main</button>
+
         </form>
     </div>
 </div>
-
 
 </body>
 </html>

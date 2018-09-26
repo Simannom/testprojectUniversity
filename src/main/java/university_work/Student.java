@@ -1,7 +1,13 @@
 package university_work;
 
 import fillDB.FillDB;
+import fillDB.SQLConnection;
+import login_window.servlets.LoginServlet;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -13,26 +19,24 @@ import java.util.logging.Logger;
 
 import static fillDB.SQLConnection.getConnection;
 
-public class Student {
+public class Student //implements Serializable
+{
 
-    private String fullName;
-    private Integer groupNumber;
-    private String faculty;
-    private Integer scholarshipType;
-    private Calendar startDate;
+    protected String fullName;
+    protected Integer groupNumber;
+    protected Integer scholarshipType;
+    protected Calendar startDate;
 
-    public Student(String fullName, Integer groupNumber, String faculty, Integer scholarshipType, Calendar startDate){
+    public Student(String fullName, Integer groupNumber, Integer scholarshipType, Calendar startDate){
         this.fullName = fullName;
         this.groupNumber = groupNumber;
-        this.faculty = faculty;
         this.scholarshipType = scholarshipType % 3;
         this.startDate = startDate;
     }
 
-    public Student(String fullName, Integer groupNumber, String faculty, Integer scholarshipType, String dateString){
+    public Student(String fullName, Integer groupNumber, Integer scholarshipType, String dateString){
         this.fullName = fullName;
         this.groupNumber = groupNumber;
-        this.faculty = faculty;
         this.scholarshipType = scholarshipType % 3;
         Calendar c = Calendar.getInstance();
         DateFormat format = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -45,6 +49,57 @@ public class Student {
         this.startDate = c;
     }
 
+    public String getFullName(){
+        return this.fullName;
+    }
+
+    public static Student fromRequestParameters(HttpServletRequest request){
+        String fullName = request.getParameter("fullName");
+        Integer groupNumber = Integer.parseInt(request.getParameter("GroupNumber"));
+        if (groupNumber < 100 || groupNumber > 999) groupNumber = 0;
+        Integer scholarshipType = Integer.parseInt(request.getParameter("ScholarshipType"));
+        if (scholarshipType < 0 || scholarshipType > 2) scholarshipType = 0;
+        return new Student(fullName,groupNumber ,scholarshipType,
+                request.getParameter("start_date")
+                );
+    }
+
+    public String toString(){
+        return this.fullName + "\t " + this.groupNumber
+                + "\t " + this.scholarshipType
+                + "\t " + toString(this.startDate);
+    }
+
+    //with delete button
+    public String toStringTableRow(){
+        return "<tr>"
+                +"<th>"+ this.fullName + "</th>"
+                +"<th>" + this.groupNumber + "</th>"
+                + "<th>" + this.scholarshipType + "</th>"
+                + "<th>" + toString(this.startDate)+ "</th>"
+                + "<th><button type=\"submit\" name=\"button\" value=\"del_" + this.fullName + "\" />Delete</button></th>"
+                + "</tr>"
+                + "\n";
+
+    }
+
+/*
+    private void writeObject(java.io.ObjectOutputStream out)
+            throws IOException {
+        out.writeBytes(this.toString());
+
+    }
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException{
+
+    }
+    private void readObjectNoData()
+            throws ObjectStreamException{
+
+    }
+    */
+
+
     public static String toString(Calendar date) {
         DateFormat format1 = DateFormat.getDateInstance(DateFormat.SHORT);
         String out = format1.format(date.getTime());
@@ -55,8 +110,7 @@ public class Student {
         String result = "INSERT INTO public.\"Students\" (\n" +
                 "\"FullName\",\"GroupNumber\", \"ScholarshipType\", start_date) VALUES (\n" +
                 "\'" + this.fullName + "\'," + this.groupNumber.toString() + ","+
-                this.scholarshipType.toString() + "," + "\'"+ toString(this.startDate) + "\'" + ")\n" +
-                " returning \"GroupNumber\";";
+                this.scholarshipType.toString() + "," + "\'"+ toString(this.startDate) + "\'" + ")\n";
         return result;
     }
 
@@ -64,82 +118,31 @@ public class Student {
         stmt.executeUpdate(this.addSQLQuery());
     }
 
-    public String deleteSQLQuery(){
+    public void addStudent() {
+        try {
+            Connection connection = getConnection();
+            Statement statement = connection.createStatement();
+            this.addStudent(statement);
+        }
+        catch (SQLException e){
+            System.out.println("addStudent smth wrong");
+        }
+    }
+
+    public static String deletebyNameSQLQuery(String fullName){
         String result = "DELETE FROM public.\"Students\" " +
                         "WHERE \"FullName\" IN" +
-                        "(\'"+ this.fullName +"\');";
+                        "(\'"+ fullName +"\');";
         return result;
     }
 
-    public void deleteStudent(Statement stmt) throws SQLException {
-        stmt.executeUpdate(this.deleteSQLQuery());
+    public static void deleteStudentbyName(Statement stmt, String fullName) throws SQLException {
+        stmt.executeUpdate(deletebyNameSQLQuery(fullName));
     }
 
     public static String listSQLQuery(){
-        String result = "SELECT * FROM public.\"Students\" S LEFT JOIN public.\"Groups\" G ON S.\"GroupNumber\" = G.\"GroupNumber\" ";
+        String result = "SELECT * FROM public.\"Students\" ORDER BY \"FullName\"";
         return result;
-    }
-    public static String stringListStudents(Statement stmt) throws SQLException {
-        String result = "";
-        ResultSet rs = stmt.executeQuery(listSQLQuery());
-        while (rs.next()) {
-            result += "#" + rs.getRow()
-                    + "\t" + rs.getString("FullName")
-                    + "\t" + rs.getInt("GroupNumber")
-                    + "\t" + rs.getString("Faculty")
-                    + "\t" + rs.getInt("ScholarshipType")
-                    + "\t" + rs.getDate("start_date")
-                    + "\n"
-            ;
-        }
-        rs.close();
-        return result;
-    }
-
-    public static String stringListStudentsWebST(Statement stmt) throws SQLException {
-        String result = "";
-        ResultSet rs = stmt.executeQuery(listSQLQuery());
-        int i = 0;
-        while (rs.next()) {
-            /*
-            String result = "<th>" + this.fullName + "</th>"
-                +  "<th>" + this.groupNumber.toString() + "</th>"
-                +  "<th>" + this.faculty + "</th>"
-                +  "<th>" + this.scholarshipType.toString() + "</th>"
-                +  "<th>" + this.startDate.toString() + "</th>" ;
-            * */
-            result += "<tr>"
-                    + "<th>" + rs.getString("FullName") + "</th>"
-                    + "<th>" + rs.getInt("GroupNumber") + "</th>"
-                    + "<th>" + rs.getString("Faculty") + "</th>"
-                    + "<th>" + rs.getInt("ScholarshipType") + "</th>"
-                    + "<th>" + rs.getDate("start_date") + "</th>"
-                    +
-                    "<!--" +
-                    "<th><input type=\"button\" id=b1_" + i + "  value=\"Submit\" name=\"button\" onClick='submitForm(this)'/></th>" +
-                    "<th><input type=\"button\" id=b2_" + i + "  value=\"Update\" name=\"button\" onClick='submitForm(this)'/></th>" +
-                    "-->" +
-                    "<th><input type=\"button\" id=b3_" + i + " value=\"Delete\" name=\"button\" onClick='submitForm(this)'/></th>" +
-                    "</tr>"
-                    + "\n";
-            ++i;
-        }
-        rs.close();
-        return result;
-    }
-
-    public static String stringListStudentsWeb (){
-
-        try {
-            Connection connection = getConnection();
-            Statement statement;
-            statement = connection.createStatement();
-            String result = stringListStudentsWebST(statement);
-            statement.close();
-            return result;
-        }
-        catch (SQLException e){}
-        return "";
     }
 
     public static List<Student> listStudents(Statement stmt) throws SQLException {
@@ -149,7 +152,7 @@ public class Student {
         while (rs.next()) {
             student = new Student (rs.getString("FullName"),
                     rs.getInt("GroupNumber"),
-                    rs.getString("Faculty"),
+                    //rs.getString("Faculty"),
                     rs.getInt("ScholarshipType"),
                     //возможно надо более адекваьно брать дату
                     rs.getDate("start_date").toString()
@@ -183,33 +186,45 @@ public class Student {
     }
 
     public static String rowsSQLQuery(){
-        return "SELECT COUNT(*) FROM public.\"Students\"";
+        return "SELECT COUNT(*) as rowcount FROM public.\"Students\"";
     }
 
     public static Integer rowsST(Statement statement) throws SQLException {
-        return statement.executeUpdate(rowsSQLQuery());
+        ResultSet rs = statement.executeQuery(rowsSQLQuery());
+        rs.next();
+        Integer res = rs.getInt("rowcount");
+        rs.close();
+        return res;
     }
 
     public static Integer rows(){
         Integer row_num = 0;
-        try{
+        try {
+            //SQLConnection.ensureConnection();
             Connection connection = getConnection();
-
-            try {
-                Statement statement;
-                statement = connection.createStatement();
-                row_num = Student.rowsST(statement);
-                statement.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (Exception ex) {
-            //выводим наиболее значимые сообщения
-            row_num = 0;
-            Logger.getLogger(FillDB.class.getName()).log(Level.SEVERE, null, ex);
-
+            Statement statement = connection.createStatement();
+            //problem
+            row_num = rowsST(statement);
+            statement.close();
+        }
+        catch (SQLException e){
+            System.out.println("Student rows smth wrong");
         }
         return row_num;
+    }
+
+
+    public static void deletebyName(String fullName){
+        try {
+            //SQLConnection.ensureConnection();
+            Connection connection = getConnection();
+            Statement statement = connection.createStatement();
+            deleteStudentbyName(statement, fullName);
+            statement.close();
+        }
+        catch (SQLException e){
+            System.out.println("Student deletebyName smth wrong");
+        }
     }
 
 }

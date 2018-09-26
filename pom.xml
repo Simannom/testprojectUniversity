@@ -45,11 +45,12 @@
             <scope>provided</scope>
         </dependency>
 
-<!--        <dependency>
-            <groupId>org.ehcache</groupId>
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache</artifactId>
-            <version>3.5.2</version>
-        </dependency>-->
+            <version>2.10.5</version>
+        </dependency>
+
 
     </dependencies>
 

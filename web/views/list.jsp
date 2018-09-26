@@ -1,5 +1,5 @@
-<%@ page import="fillDB.SQLConnection" %>
-<%@ page import="university_work.Student" %><%--
+<%@ page import="university_work.StudentResult" %>
+<%@ page import="cache.StudentCacheManager" %><%--
   Created by IntelliJ IDEA.
   User: Saphi
   Date: 19.08.2018
@@ -23,21 +23,9 @@
         <div>
             <h2>Students</h2>
         </div>
-        <%
-            /*
-            List<String> lines = (List<String>) request.getAttribute("userNames");
 
-            if (lines != null && !lines.isEmpty()) {
-                out.println("<ui>");
-                for (String s : lines) {
-                    out.println("<li>" + s + "</li>");
-                }
-                out.println("</ui>");
-            } else out.println("<p>There are no users yet!</p>");
-            */
-        %>
 
-        <form action="./list.jsp">
+        <form action="${pageContext.request.contextPath}/list" method="post">
             <table border=1>
             <tr>
                 <th> FullName </th>
@@ -49,35 +37,26 @@
             </tr>
 
                 <%
-                    out.println(Student.stringListStudentsWeb());
+                    //без кэша
+                    //out.println(StudentResult.stringListStudentsWeb());
+                    //с кэшем
+                    out.println(StudentResult.stringListStudentsTable(StudentCacheManager.select()));
                 %>
 
-                    <!--
-                    <th><input type="button" id=b1 value="Submit" name="button" onClick='submitForm(this)'/></th>
-                    <th><input type="button" id=b2 value="Update" name="button" onClick='submitForm(this)'/></th>
-                    <th><input type="button" id=b3 value="Delete" name="button" onClick='submitForm(this)'/></th>
-                </tr>
-                -->
 
+
+                <!--
+                <button type="submit" name="button" value="list_b3">Add</button>
+                -->
             </table>
             <input type='hidden' id='hid1'  name='hid1'>
+
+            <button type="submit" name="button" value="list_button">Back to main</button>
         </form>
     </div>
 </div>
 
-<%
-    /*
-    попытка по кнопочке не только переходить, но и завершать соединение
 
-    if(request.getParameter("Back to main") != null) {
-        SQLConnection.breakConnection();
 
-    }
-    */
-%>
-
-<div>
-    <button onclick="location.href='..'", >Back to main</button>
-</div>
 </body>
 </html>
